@@ -9,14 +9,24 @@ const DB_FILE = path.join(DATA_DIR, "db.json");
 
 const DEFAULT_DB = { products: [], orders: [], users: [], sessions: [] };
 
+// Serverless platforms (Vercel, etc.) run on a read-only filesystem. When disk
+// writes fail we transparently fall back to an in-memory store so the app keeps
+// working — data just won't persist across cold starts there.
+let memoryDb = null;
+
 function ensureFile() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(DEFAULT_DB, null, 2), "utf-8");
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(DB_FILE)) {
+      fs.writeFileSync(DB_FILE, JSON.stringify(DEFAULT_DB, null, 2), "utf-8");
+    }
+  } catch {
+    memoryDb = { products: [], orders: [], users: [], sessions: [] };
   }
 }
 
 function readDB() {
+  if (memoryDb) return memoryDb;
   ensureFile();
   try {
     const raw = fs.readFileSync(DB_FILE, "utf-8");
@@ -28,8 +38,12 @@ function readDB() {
 }
 
 function writeDB(db) {
-  ensureFile();
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf-8");
+  try {
+    ensureFile();
+    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf-8");
+  } catch {
+    memoryDb = db; // keep serving from memory for this instance
+  }
 }
 
 export function getProducts() {

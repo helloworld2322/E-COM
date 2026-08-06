@@ -1,3 +1,6 @@
+const API_BASE =
+  import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+
 const TOKEN_KEY = "nova-token";
 
 export function getToken() {
@@ -28,7 +31,10 @@ async function request(path, options = {}) {
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(path, { ...options, headers });
+  const res = await fetch(`${API_BASE}${path.replace("/api", "")}`, {
+  ...options,
+  headers,
+});
   // A 401 from a login attempt just means "wrong credentials" — don't treat it
   // as a session expiry (which would wipe a valid logged-in session).
   if (res.status === 401 && onUnauthorized && !path.startsWith("/api/auth")) onUnauthorized();
