@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+client/dist/
+
+# Runtime data (user accounts, orders, sessions) — re-seeded automatically on first boot
+server/data/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Freebuff app data
+.freebuff/
+
+# OS
+.DS_Store
+Thumbs.db
